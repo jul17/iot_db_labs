@@ -39,19 +39,25 @@ class FileManager(process_data_interface.ProcessData):
             list_json = list()
             try:
                 with open(file, encoding='utf-8') as f:
-                    csv_reader = csv.DictReader(f, delimiter=';')
-                    for item in csv_reader:
-                        id = item['id']
-                        data_to_json[id] = item
-                        count+=1
+                    lines = f.readlines()[1:]
+                    for item in lines:
+                        it = item.replace('\n', '').split(';')
+                        data_to_json['ID'] = it[0]
+                        data_to_json['CODE'] = it[1]
+                        data_to_json['NAME'] = it[2]
+                        data_to_json['PLAN_MONEY'] = float(it[7])
+                        data_to_json['FINAL_MONEY'] = float(it[8])
+                        data_to_json['TOAL_MONEY'] = float(it[9])
+                        json_data = json.dumps(data_to_json, ensure_ascii=False).encode('utf8')
+                        show_data_method.view_data(json_data)
                         if (end_indx == 100 + start_indx):
                             redis_client.set_data(rows_message, "From file:{} Lines: {} - {} ".format(file_name, str(start_indx), str(end_indx)))
                             redis_client.show_data(rows_message)
                             count += 1
                             start_indx = end_indx
                         end_indx += 1
-                    json_data = json.dumps(data_to_json, ensure_ascii=False).encode('utf8')
-                    show_data_method.view_data(data_to_json)
+                    # json_data = json.dumps(data_to_json, ensure_ascii=False).encode('utf8')
+                    # show_data_method.view_data(data_to_json)
                     redis_client.set_data(file_status, complete_message)
                     redis_client.show_data(file_status)
                     return True
